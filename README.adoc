@@ -1,0 +1,2 @@
+Can be served locally, but browser needs internet connection to retrieve libraries.
+You could also copy the libs locally and would not need any internet connection at all.

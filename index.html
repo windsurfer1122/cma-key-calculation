@@ -1,0 +1,102 @@
+<html>
+
+<head>
+  <meta name='robots' content='noindex'>
+  <meta name='googlebot' content='noindex'>
+  <!-- js libs from https://cdnjs.com/libraries -->
+  <!-- CryptoJS 4.1.1: https://github.com/brix/crypto-js  https://cryptojs.gitbook.io/docs/ -->
+  <script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js'></script>
+  <!-- jsSHA 3.3.0: https://github.com/Caligatio/jsSHA  https://caligatio.github.io/jsSHA/ -->
+  <script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/jsSHA/3.3.0/sha.js'></script>
+  <!-- js -->
+  <script type='text/javascript'>
+    var hashSecretHex = atob('NTM3MjY5MjA0QTYxNzk2NTc3NjE3MjY0NjU2RTY1NzA3NTcyNjEyMDRCNkY3NDc0NjU=');
+    var aesKeyWordArray = CryptoJS.enc.Hex.parse(atob('YTlmYTVhNjI3OTlmY2M0YzcyNmI0ZTJjZTM1MDZkMzg='));
+
+    function calcKey() {
+      var aidInputHex = document.getElementById('aidInputHex');
+      var hashInputHex = document.getElementById('hashInputHex');
+      var hashOutputHex = document.getElementById('hashOutputHex');
+      var keyHex = document.getElementById('keyHex');
+
+      // Initialize Form Fields
+      hashInputHex.value = '';
+      hashOutputHex.value = '';
+      keyHex.value = 'calculating...';
+      keyHex.style.background = '#ffcccc';
+
+      // Check AID length
+      if (aidInputHex.value.length < 16) {
+        keyHex.value = 'AID to short';
+        return;
+      }
+      if (aidInputHex.value.length > 16) {
+        keyHex.value = 'AID to long';
+        return;
+      }
+
+      // Calculate SHA-256 from AID + Secret
+      try {
+        hashInputHex.value = (aidInputHex.value + hashSecretHex).toLowerCase();
+        var hashObj = new jsSHA('SHA-256', 'HEX', {numRounds: 1});
+        hashObj.update(hashInputHex.value);
+        hashOutputHex.value = hashObj.getHash('HEX');
+      } catch(e) {
+        keyHex.value = e.message;
+        return;
+      }
+
+      // Decrypt Hash with AES-ECB
+      try {
+        var decryptedKey = CryptoJS.AES.decrypt(
+          {
+            iv: null,
+            salt: null,
+            ciphertext: CryptoJS.enc.Hex.parse(hashOutputHex.value),
+          },
+          aesKeyWordArray,
+          {
+            mode: CryptoJS.mode.ECB,
+            padding: CryptoJS.pad.NoPadding,
+          }
+        );
+        //keyHex.value = decryptedKey.toString(CryptoJS.enc.Hex); //doesn't work, so we have to map() the words array ourselves
+        keyHex.value = decryptedKey.words.map(
+          function(integer) {
+            if (integer < 0) integer >>>= 0; // convert to two's complement via unsigned right shift
+            return integer.toString(16).padStart(8,'0');
+          })
+          .join('');
+        keyHex.style.background = '#ccffcc';
+      } catch(e) {
+        keyHex.value = e.message;
+        return;
+      }
+    }
+  </script>
+</head>
+
+<body onload='calcKey();'>
+  <form action='#' method='get'>
+    <fieldset>
+      <div>
+          <label for='aidInputHex'>AID in HEX :</label>
+          <input type='text' size='20' maxlength='16' name='aidInputHex' id='aidInputHex' onkeyup='calcKey()' />
+      </div>
+      <div style="display:none">
+          <label for='hashInputHex'>Input for Hash:</label>
+          <input type='text' size='80' maxlength='66' name='hashInputHex' id='hashInputHex' style='background-color: #eeeeee' readonly />
+      </div>
+      <div>
+          <label for='hashOutputHex'>SHA-256 Hash:</label>
+          <input type='text' size='75' maxlength='64' name='hashOutputHex' id='hashOutputHex' style='background-color: #eeeeee' readonly />
+      </div>
+      <div>
+          <label for='keyHex'>Key:</label>
+          <input type='text' size='75' maxlength='64' name='keyHex' id='keyHex' style='background-color: #eeeeee' readonly />
+      </div>
+    </fieldset>
+  </form>
+</body>
+
+</html>
