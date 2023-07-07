@@ -6,8 +6,7 @@
   <!-- js libs from https://cdnjs.com/libraries -->
   <!-- CryptoJS 4.1.1: https://github.com/brix/crypto-js  https://cryptojs.gitbook.io/docs/ -->
   <script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js'></script>
-  <!-- jsSHA 3.3.0: https://github.com/Caligatio/jsSHA  https://caligatio.github.io/jsSHA/ -->
-  <script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/jsSHA/3.3.0/sha.js'></script>
+  <!-- <script type='text/javascript' src='crypto-js/4.1.1/crypto-js.min.js'></script>-->
   <!-- js -->
   <script type='text/javascript'>
     var hashSecretHex = atob('NTM3MjY5MjA0QTYxNzk2NTc3NjE3MjY0NjU2RTY1NzA3NTcyNjEyMDRCNkY3NDc0NjU=');
@@ -38,9 +37,7 @@
       // Calculate SHA-256 from AID + Secret
       try {
         hashInputHex.value = (aidInputHex.value + hashSecretHex).toLowerCase();
-        var hashObj = new jsSHA('SHA-256', 'HEX', {numRounds: 1});
-        hashObj.update(hashInputHex.value);
-        hashOutputHex.value = hashObj.getHash('HEX');
+        hashOutputHex.value = CryptoJS.SHA256(CryptoJS.enc.Hex.parse(hashInputHex.value)).toString(CryptoJS.enc.Hex);
       } catch(e) {
         keyHex.value = e.message;
         return;
@@ -50,23 +47,18 @@
       try {
         var decryptedKey = CryptoJS.AES.decrypt(
           {
+            key: aesKeyWordArray, // key has to be specified here too
             iv: null,
             salt: null,
             ciphertext: CryptoJS.enc.Hex.parse(hashOutputHex.value),
           },
-          aesKeyWordArray,
+          aesKeyWordArray, // key has to be specified here too
           {
             mode: CryptoJS.mode.ECB,
             padding: CryptoJS.pad.NoPadding,
           }
         );
-        //keyHex.value = decryptedKey.toString(CryptoJS.enc.Hex); //doesn't work, so we have to map() the words array ourselves
-        keyHex.value = decryptedKey.words.map(
-          function(integer) {
-            if (integer < 0) integer >>>= 0; // convert to two's complement via unsigned right shift
-            return integer.toString(16).padStart(8,'0');
-          })
-          .join('');
+        keyHex.value = decryptedKey.toString(CryptoJS.enc.Hex);
         keyHex.style.background = '#ccffcc';
       } catch(e) {
         keyHex.value = e.message;
