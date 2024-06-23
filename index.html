@@ -1,12 +1,14 @@
 <html>
 
 <head>
-  <meta name='robots' content='noindex'>
-  <meta name='googlebot' content='noindex'>
+  <meta name='robots' content='none, noimageai, noai'>
+  <meta name='googlebot' content='none'>
+
   <!-- js libs from https://cdnjs.com/libraries -->
   <!-- CryptoJS 4.1.1: https://github.com/brix/crypto-js  https://cryptojs.gitbook.io/docs/ -->
   <script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js'></script>
   <!-- <script type='text/javascript' src='crypto-js/4.1.1/crypto-js.min.js'></script>-->
+
   <!-- js -->
   <script type='text/javascript'>
     var hashSecretHex = atob('NTM3MjY5MjA0QTYxNzk2NTc3NjE3MjY0NjU2RTY1NzA3NTcyNjEyMDRCNkY3NDc0NjU=');
@@ -26,11 +28,11 @@
 
       // Check AID length
       if (aidInputHex.value.length < 16) {
-        keyHex.value = 'AID to short';
+        keyHex.value = 'AID too short (<16)';
         return;
       }
       if (aidInputHex.value.length > 16) {
-        keyHex.value = 'AID to long';
+        keyHex.value = 'AID too long (>16)';
         return;
       }
 
